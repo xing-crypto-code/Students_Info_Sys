@@ -1,0 +1,20 @@
+{
+    "configurations": [
+        {
+            // 当前使用 GCC 编译器的 Windows 配置
+            "name": "Win32",
+            // 让源文件可以直接使用 #include "stu.h"
+            "includePath": [
+                "${workspaceFolder}/Inc",
+                "${workspaceFolder}/Src"
+            ],
+            // 当前项目使用 C11 标准
+            "defines": [],
+            "compilerPath": "gcc",
+            "cStandard": "c11",
+            // 使用 GCC 的 C 语言 IntelliSense 模式
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}

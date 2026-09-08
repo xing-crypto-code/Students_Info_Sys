@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            // 调试学生信息管理系统。
+            "name": "C/C++: gcc.exe 构建和调试活动文件",
+            "type": "cppdbg",
+            "request": "launch",
+            // 使用构建任务生成的可执行文件。
+            "program": "${workspaceFolder}\\student_system.exe",
+            "args": [],
+            // 从工作区根目录启动程序。
+            "cwd": "${workspaceFolder}",
+            // 在 VS Code 集成终端中显示程序输出。
+            "externalConsole": false,
+            // 使用 MinGW 提供的 GDB 调试器。
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:\\bandizip\\mingw64\\bin\\gdb.exe",
+            // 调试前先执行项目构建任务。
+            "preLaunchTask": "C/C++: gcc.exe 生成活动文件",
+            "setupCommands": [
+                {
+                    // 启用 GDB 的标准变量显示格式。
+                    "description": "启用 GDB pretty-printing",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+    ]
+}
