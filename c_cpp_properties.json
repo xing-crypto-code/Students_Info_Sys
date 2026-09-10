@@ -6,7 +6,8 @@
             // 让源文件可以直接使用 #include "stu.h"
             "includePath": [
                 "${workspaceFolder}/Inc",
-                "${workspaceFolder}/Src"
+                "${workspaceFolder}/Src",
+                "${workspaceFolder}/lvgl"
             ],
             // 当前项目使用 C11 标准
             "defines": [],

@@ -15,9 +15,15 @@
                 "${workspaceFolder}\\Src\\file.c",
                 // 编译控制台初始化功能。
                 "${workspaceFolder}\\Src\\console.c",
+                // 编译统一 CSV 读写功能。
+                "${workspaceFolder}\\lvgl\\read_students_csv.c",
+                "${workspaceFolder}\\lvgl\\write_students_csv.c",
+                "-DREAD_STUDENTS_CSV_NO_MAIN",
                 // 指定头文件所在目录。
                 "-I",
                 "${workspaceFolder}\\Inc",
+                "-I",
+                "${workspaceFolder}\\lvgl",
                 // 指定生成的可执行文件路径。
                 "-o",
                 "${workspaceFolder}\\student_system.exe"
