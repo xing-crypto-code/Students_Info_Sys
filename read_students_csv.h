@@ -12,47 +12,7 @@
 #ifndef READ_STUDENTS_CSV_H
 #define READ_STUDENTS_CSV_H
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-/* ========== 常量 ========== */
-
-/** 系统最多保存的学生人数 */
-#define MAX_STUDENTS   200
-
-/** 年级/班级/姓名字符串的最大字节数（含 '\0'） */
-#define MAX_FIELD_LEN   64
-
-/** CSV 单行 / 表头缓冲区长度 */
-#define MAX_LINE_LEN   1024
-
-/* ========== 学生结构体 ========== */
-
-/**
- * 学生信息结构体。
- *
- * 字段说明：
- *  - grade      年级，如 "2023级"
- *  - class_name 班级，如 "计算机1班"
- *  - id         学号，12 位数字，使用 uint64_t 保存
- *  - name       姓名
- *  - gender     性别：true = 男，false = 女
- *  - score      分数，如 88.5
- *  - gpa        绩点，如 3.5
- *  - rank       排名；CSV 中可读入初始值，
- *               最终以 recalculate_ranking_by_score() 计算为准
- */
-typedef struct {
-    char     grade[MAX_FIELD_LEN];     /* 年级（20xx级） */
-    char     class_name[MAX_FIELD_LEN]; /* 班级（专业x班） */
-    uint64_t id;                       /* 学号：12 位数字 */
-    char     name[MAX_FIELD_LEN];      /* 姓名 */
-    bool     gender;                   /* 性别：true=男，false=女 */
-    float    score;                    /* 分数（xy.z） */
-    float    gpa;                      /* 绩点（x.y） */
-    uint16_t rank;                     /* 排名（xxx） */
-} StudentCSV;
+#include "../Inc/stu.h"
 
 /* ========== 函数声明 ========== */
 

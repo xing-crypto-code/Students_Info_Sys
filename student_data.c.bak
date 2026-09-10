@@ -1,0 +1,347 @@
+#include "read_students_csv.h"
+#include "write_students_csv.h"
+#include "../Inc/stu.h"
+
+#include <ctype.h>
+#include <inttypes.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define DATA_FIELD_GRADE  0
+#define DATA_FIELD_CLASS  1
+#define DATA_FIELD_ID     2
+#define DATA_FIELD_NAME   3
+#define DATA_FIELD_GENDER 4
+#define DATA_FIELD_SCORE  5
+#define DATA_FIELD_GPA    6
+#define DATA_FIELD_RANK   7
+#define DATA_FIELD_COUNT  8
+
+static StudentCSV *students;
+static int display_indexes[MAX_STUDENTS];
+static int display_count;
+static int data_initialized;
+static int filter_field = -1;
+static char filter_option[MAX_FIELD_LEN];
+static char csv_header[MAX_LINE_LEN];
+
+static void data_rebuild_display(void)
+{
+    display_count = 0;
+
+    for(int i = 0; i < getStudentCount(); i++) {
+        if(filter_field < 0 || filter_option[0] == '\0') {
+            display_indexes[display_count++] = i;
+        } else {
+            char value[MAX_FIELD_LEN];
+            int matches = 0;
+
+            if(filter_field == DATA_FIELD_SCORE) {
+                float lower;
+                float upper;
+                if(sscanf(filter_option, "%f-%f", &lower, &upper) == 2) {
+                    matches = students[i].score >= lower && students[i].score < upper;
+                    if(students[i].score == upper && upper >= 100.0f) matches = 1;
+                }
+            } else {
+                value[0] = '\0';
+                switch(filter_field) {
+                case DATA_FIELD_GRADE:
+                    strncpy(value, students[i].grade, sizeof(value) - 1);
+                    break;
+                case DATA_FIELD_CLASS:
+                    strncpy(value, students[i].class_name, sizeof(value) - 1);
+                    break;
+                case DATA_FIELD_GENDER:
+                    strncpy(value, students[i].gender ? "男" : "女", sizeof(value) - 1);
+                    break;
+                default:
+                    break;
+                }
+                value[sizeof(value) - 1] = '\0';
+                matches = strcmp(value, filter_option) == 0;
+            }
+
+            if(matches) display_indexes[display_count++] = i;
+        }
+    }
+}
+
+static void data_load_default(void)
+{
+    StudentCSV loaded[MAX_STUDENTS];
+    const char *paths[] = { "Data/students.csv", "lvgl/students.csv", "students.csv" };
+    int count = -1;
+
+    for(size_t i = 0; i < sizeof(paths) / sizeof(paths[0]); i++) {
+        count = read_students_csv(paths[i], loaded, MAX_STUDENTS,
+                                  csv_header, sizeof(csv_header));
+        if(count >= 0) break;
+    }
+
+    if(count < 0) {
+        replaceStudents(NULL, 0);
+        csv_header[0] = '\0';
+    } else {
+        replaceStudents(loaded, count);
+        students = getStudentArray();
+        recalculate_ranking_by_score(students, getStudentCount());
+    }
+
+    data_rebuild_display();
+    data_initialized = 1;
+}
+
+static void data_ensure_initialized(void)
+{
+    students = getStudentArray();
+    if(!data_initialized) data_load_default();
+}
+
+static const char *data_string_value(const StudentCSV *student, int field)
+{
+    switch(field) {
+    case DATA_FIELD_GRADE:  return student->grade;
+    case DATA_FIELD_CLASS:  return student->class_name;
+    case DATA_FIELD_NAME:   return student->name;
+    default:                return "";
+    }
+}
+
+int data_get_count(void)
+{
+    data_ensure_initialized();
+    return getStudentCount();
+}
+
+StudentCSV *data_get_all(void)
+{
+    data_ensure_initialized();
+    return getStudentArray();
+}
+
+int data_get_display_count(void)
+{
+    data_ensure_initialized();
+    if(getStudentCount() == 0 && filter_field < 0) return 200;
+    return display_count;
+}
+
+int data_get_display_index(int display_row)
+{
+    data_ensure_initialized();
+    if(display_row < 0 || display_row >= display_count) return -1;
+    return display_indexes[display_row];
+}
+
+int data_import_csv(const char *path)
+{
+    StudentCSV loaded[MAX_STUDENTS];
+    int count;
+
+    if(path == NULL || path[0] == '\0') return -1;
+    count = read_students_csv(path, loaded, MAX_STUDENTS,
+                              csv_header, sizeof(csv_header));
+    if(count < 0) return -1;
+
+    replaceStudents(loaded, count);
+    students = getStudentArray();
+    recalculate_ranking_by_score(students, getStudentCount());
+    filter_field = -1;
+    filter_option[0] = '\0';
+    data_rebuild_display();
+    data_initialized = 1;
+    return getStudentCount();
+}
+
+int data_export_csv(const char *path)
+{
+    data_ensure_initialized();
+    if(path == NULL || path[0] == '\0') return -1;
+    return write_students_csv(path, getStudentArray(), getStudentCount(), csv_header);
+}
+
+int data_delete_student(int index)
+{
+    data_ensure_initialized();
+    if(index < 0 || index >= getStudentCount()) return 0;
+    if(!deleteStudent(getStudent(index)->id)) return 0;
+    students = getStudentArray();
+    recalculate_ranking_by_score(students, getStudentCount());
+    data_rebuild_display();
+    return 1;
+}
+
+int data_update_student_field(int index, int field, const char *text)
+{
+    char *end;
+    unsigned long long id;
+    float number;
+
+    data_ensure_initialized();
+    if(index < 0 || index >= getStudentCount() || text == NULL) return 0;
+
+    switch(field) {
+    case DATA_FIELD_GRADE:
+        strncpy(students[index].grade, text, MAX_FIELD_LEN - 1);
+        students[index].grade[MAX_FIELD_LEN - 1] = '\0';
+        break;
+    case DATA_FIELD_CLASS:
+        strncpy(students[index].class_name, text, MAX_FIELD_LEN - 1);
+        students[index].class_name[MAX_FIELD_LEN - 1] = '\0';
+        break;
+    case DATA_FIELD_ID:
+        id = strtoull(text, &end, 10);
+        if(end == text || *end != '\0') return 0;
+        students[index].id = (uint64_t)id;
+        break;
+    case DATA_FIELD_NAME:
+        strncpy(students[index].name, text, MAX_FIELD_LEN - 1);
+        students[index].name[MAX_FIELD_LEN - 1] = '\0';
+        break;
+    case DATA_FIELD_GENDER:
+        if(strcmp(text, "男") == 0 || strcmp(text, "M") == 0 || strcmp(text, "1") == 0) {
+            students[index].gender = true;
+        } else if(strcmp(text, "女") == 0 || strcmp(text, "F") == 0 || strcmp(text, "0") == 0) {
+            students[index].gender = false;
+        } else {
+            return 0;
+        }
+        break;
+    case DATA_FIELD_SCORE:
+    case DATA_FIELD_GPA:
+        number = strtof(text, &end);
+        if(end == text || *end != '\0') return 0;
+        if(field == DATA_FIELD_SCORE) students[index].score = number;
+        else students[index].gpa = number;
+        break;
+    case DATA_FIELD_RANK:
+        id = strtoull(text, &end, 10);
+        if(end == text || *end != '\0' || id > UINT16_MAX) return 0;
+        students[index].rank = (uint16_t)id;
+        break;
+    default:
+        return 0;
+    }
+
+    data_rebuild_display();
+    return 1;
+}
+
+int data_get_filter_options(int field, char options[][MAX_FIELD_LEN], int max_opts)
+{
+    int option_count = 0;
+
+    data_ensure_initialized();
+    if(options == NULL || max_opts <= 0) return 0;
+    if(field != DATA_FIELD_GRADE && field != DATA_FIELD_CLASS &&
+       field != DATA_FIELD_GENDER && field != DATA_FIELD_SCORE) return 0;
+
+    for(int i = 0; i < getStudentCount() && option_count < max_opts; i++) {
+        char candidate[MAX_FIELD_LEN];
+        int exists = 0;
+
+        if(field == DATA_FIELD_SCORE) {
+            int lower = (int)(students[i].score / 10.0f) * 10;
+            int upper = lower + 10;
+            snprintf(candidate, sizeof(candidate), "%d-%d", lower, upper);
+        } else if(field == DATA_FIELD_GENDER) {
+            strncpy(candidate, students[i].gender ? "男" : "女", sizeof(candidate) - 1);
+            candidate[sizeof(candidate) - 1] = '\0';
+        } else {
+            strncpy(candidate, data_string_value(&students[i], field), sizeof(candidate) - 1);
+            candidate[sizeof(candidate) - 1] = '\0';
+        }
+
+        for(int j = 0; j < option_count; j++) {
+            if(strcmp(options[j], candidate) == 0) {
+                exists = 1;
+                break;
+            }
+        }
+        if(!exists) {
+            strncpy(options[option_count], candidate, MAX_FIELD_LEN - 1);
+            options[option_count][MAX_FIELD_LEN - 1] = '\0';
+            option_count++;
+        }
+    }
+
+    return option_count;
+}
+
+int data_apply_filter(int field, const char *option)
+{
+    data_ensure_initialized();
+    if(option == NULL || option[0] == '\0' || field < 0 || field >= DATA_FIELD_COUNT) return 0;
+
+    filter_field = field;
+    strncpy(filter_option, option, sizeof(filter_option) - 1);
+    filter_option[sizeof(filter_option) - 1] = '\0';
+    data_rebuild_display();
+    return 1;
+}
+
+void data_clear_filter(void)
+{
+    data_ensure_initialized();
+    filter_field = -1;
+    filter_option[0] = '\0';
+    data_rebuild_display();
+}
+
+int data_find_matches(const char *keyword, int *out_rows, int max_rows)
+{
+    int match_count = 0;
+
+    data_ensure_initialized();
+    if(keyword == NULL) keyword = "";
+    if(out_rows == NULL || max_rows <= 0) return 0;
+
+    for(int row = 0; row < display_count && match_count < max_rows; row++) {
+        StudentCSV *student = &students[display_indexes[row]];
+        char id_text[32];
+        char score_text[32];
+        char gpa_text[32];
+        char rank_text[32];
+
+        snprintf(id_text, sizeof(id_text), "%" PRIu64, student->id);
+        snprintf(score_text, sizeof(score_text), "%.1f", student->score);
+        snprintf(gpa_text, sizeof(gpa_text), "%.1f", student->gpa);
+        snprintf(rank_text, sizeof(rank_text), "%" PRIu16, student->rank);
+
+        if(strstr(student->grade, keyword) != NULL ||
+           strstr(student->class_name, keyword) != NULL ||
+           strstr(id_text, keyword) != NULL ||
+           strstr(student->name, keyword) != NULL ||
+           strstr(student->gender ? "男" : "女", keyword) != NULL ||
+           strstr(score_text, keyword) != NULL ||
+           strstr(gpa_text, keyword) != NULL ||
+           strstr(rank_text, keyword) != NULL) {
+            out_rows[match_count++] = row;
+        }
+    }
+
+    return match_count;
+}
+
+void data_sort_students(int field, bool ascending)
+{
+    data_ensure_initialized();
+    if(field < 0 || field >= DATA_FIELD_COUNT) return;
+
+    sortStudents(field, ascending);
+    students = getStudentArray();
+    data_rebuild_display();
+}
+
+int ui_help_get_image_count(void)
+{
+    return 0;
+}
+
+const void *ui_help_get_image_src(int index)
+{
+    (void)index;
+    return NULL;
+}

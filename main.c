@@ -9,7 +9,7 @@ int main(void)
     stuInit();
 
     /* 启动时自动读取已有学生数据，菜单打开后即可直接查看。 */
-    if (!loadFromFile("Data/students_backend.txt"))
+    if (!loadFromFile("Data/students.csv"))
     {
         printf("提示：未能读取学生数据文件，将从空数据开始。\n");
     }
