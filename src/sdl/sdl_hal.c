@@ -11,10 +11,109 @@
 
 #include "sdl_hal.h"
 #include <SDL.h>
-
+#include <string.h>
 
 #define WHEEL_SCROLL_STEP 150
 static int s_wheel_watch_added = 0;
+
+/* ======================== 输入法候选窗位置同步 ======================== */
+
+static lv_obj_t* s_ime_last_focused = NULL;
+static lv_timer_t* s_ime_rect_timer = NULL;
+
+/* 周期检查当前焦点是否变成文本框；是则把 IME 候选窗定位到文本框位置 */
+static void s_ime_rect_timer_cb(lv_timer_t* timer)
+{
+    (void)timer;
+
+    lv_group_t* group = lv_group_get_default();
+    if (group == NULL) return;
+
+    lv_obj_t* focused = lv_group_get_focused(group);
+    if (focused == s_ime_last_focused) return;
+    s_ime_last_focused = focused;
+
+    if (focused == NULL) return;
+    if (!lv_obj_check_type(focused, &lv_textarea_class)) return;
+
+    lv_area_t a;
+    lv_obj_get_coords(focused, &a);
+
+    SDL_Rect rect;
+    rect.x = a.x1;
+    rect.y = a.y1;
+    rect.w = a.x2 - a.x1 + 1;
+    rect.h = a.y2 - a.y1 + 1;
+    SDL_SetTextInputRect(&rect);
+}
+
+
+/* ======================== Ctrl+V 剪贴板粘贴 ======================== */
+
+#define PASTE_BUF_SIZE 4096
+#define PASTE_TIMER_MS 20
+
+static char s_paste_buf[PASTE_BUF_SIZE];
+static int  s_paste_pending = 0;
+static lv_timer_t* s_paste_timer = NULL;
+static int s_block_next_text_input = 0;
+
+/* 由 LVGL 定时器在主循环里执行，把剪贴板文本插入当前焦点文本框 */
+static void s_paste_timer_cb(lv_timer_t* timer)
+{
+    (void)timer;
+
+    if (!s_paste_pending) return;
+    s_paste_pending = 0;
+
+    lv_group_t* group = lv_group_get_default();
+    if (group == NULL) return;
+
+    lv_obj_t* focused = lv_group_get_focused(group);
+    if (focused == NULL) return;
+    if (!lv_obj_check_type(focused, &lv_textarea_class)) return;
+
+    /* 插入到光标处；单行文本框会自动忽略换行，并受 max_length 限制 */
+    lv_textarea_add_text(focused, s_paste_buf);
+}
+
+/* SDL 事件过滤器：拦截 Ctrl+V，读取系统剪贴板，并阻止它进入 LVGL 键盘驱动 */
+static int sdl_event_filter(void* user_data, SDL_Event* event)
+{
+    (void)user_data;
+
+    if (event->type == SDL_KEYDOWN &&
+        event->key.keysym.sym == SDLK_v &&
+        (event->key.keysym.mod & KMOD_CTRL)) {
+
+        char* clip = SDL_GetClipboardText();
+        if (clip != NULL) {
+            strncpy(s_paste_buf, clip, sizeof(s_paste_buf) - 1);
+            s_paste_buf[sizeof(s_paste_buf) - 1] = '\0';
+            SDL_free(clip);
+            s_paste_pending = 1;
+        }
+
+        s_block_next_text_input = 1;
+        return 0;   /* 吞掉 Ctrl+V 的 KEYDOWN */
+    }
+
+    /* 某些平台在 Ctrl+V 时还会附带发一个 TEXTINPUT，这里一起吞掉 */
+    if (event->type == SDL_TEXTINPUT) {
+        if (s_block_next_text_input || (SDL_GetModState() & KMOD_CTRL)) {
+            s_block_next_text_input = 0;
+            return 0;
+        }
+    }
+
+    /* V 键松开后解除屏蔽，避免影响后面的正常输入 */
+    if (event->type == SDL_KEYUP && event->key.keysym.sym == SDLK_v) {
+        s_block_next_text_input = 0;
+    }
+
+    return 1;   /* 其他事件原样交给 LVGL SDL 驱动 */
+}
+
 
 /* 自定义鼠标滚轮滚动回调：
  * 找到鼠标下面最近的可滚动对象，并让它滚动，
@@ -94,6 +193,16 @@ lv_display_t* app_sdl_hal_init(int32_t w, int32_t h)
     lv_display_t* disp = lv_sdl_window_create(w, h);
     if (disp == NULL) return NULL;
     lv_display_set_default(disp);
+    /* 每 100ms 同步一次输入法候选窗位置 */
+    if (s_ime_rect_timer == NULL) {
+        s_ime_rect_timer = lv_timer_create(s_ime_rect_timer_cb, 100, NULL);
+    }
+
+    /* Ctrl+V：从系统剪贴板粘贴到当前焦点文本框 */
+    SDL_SetEventFilter(sdl_event_filter, NULL);
+    if (s_paste_timer == NULL) {
+        s_paste_timer = lv_timer_create(s_paste_timer_cb, PASTE_TIMER_MS, NULL);
+    }
 
     /* 创建鼠标输入设备，并将其绑定到默认分组 */
     lv_indev_t* mouse = lv_sdl_mouse_create();

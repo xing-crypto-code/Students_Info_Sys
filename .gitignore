@@ -13,3 +13,7 @@ Thumbs.db
 *~
 *.swp
 
+
+# ===== 本次上传排除 =====
+backup_reorg/
+bin/help_shown.flag

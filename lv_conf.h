@@ -39,16 +39,11 @@
   * - LV_STDLIB_RTTHREAD:    RT-Thread implementation
   * - LV_STDLIB_CUSTOM:      Implement the functions externally
   */
-#define LV_USE_STDLIB_MALLOC    LV_STDLIB_BUILTIN
-
-  /** Possible values
-   * - LV_STDLIB_BUILTIN:     LVGL's built in implementation
-   * - LV_STDLIB_CLIB:        Standard C functions, like malloc, strlen, etc
-   * - LV_STDLIB_MICROPYTHON: MicroPython implementation
-   * - LV_STDLIB_RTTHREAD:    RT-Thread implementation
-   * - LV_STDLIB_CUSTOM:      Implement the functions externally
-   */
-#define LV_USE_STDLIB_STRING    LV_STDLIB_BUILTIN
+  /* PC 端使用标准 C 库的 malloc/realloc/free。
+   * 原因：帮助图片 help1.png 原始分辨率很大（7637x4293，解码为 RGBA 约 131MB），
+   * 超过 LVGL 内置堆 LV_MEM_SIZE(128MB) 的上限，会导致图片解码失败、帮助按钮空白。
+   * 改用 CLIB 后 LVGL 与 lodepng 直接使用系统堆，大图也能正常解码。 */
+#define LV_USE_STDLIB_MALLOC    LV_STDLIB_CLIB
 
    /** Possible values
     * - LV_STDLIB_BUILTIN:     LVGL's built in implementation
@@ -57,6 +52,15 @@
     * - LV_STDLIB_RTTHREAD:    RT-Thread implementation
     * - LV_STDLIB_CUSTOM:      Implement the functions externally
     */
+#define LV_USE_STDLIB_STRING    LV_STDLIB_BUILTIN
+
+    /** Possible values
+     * - LV_STDLIB_BUILTIN:     LVGL's built in implementation
+     * - LV_STDLIB_CLIB:        Standard C functions, like malloc, strlen, etc
+     * - LV_STDLIB_MICROPYTHON: MicroPython implementation
+     * - LV_STDLIB_RTTHREAD:    RT-Thread implementation
+     * - LV_STDLIB_CUSTOM:      Implement the functions externally
+     */
 #define LV_USE_STDLIB_SPRINTF   LV_STDLIB_BUILTIN
 
 #define LV_STDINT_INCLUDE       <stdint.h>
@@ -67,7 +71,7 @@
 #define LV_STDARG_INCLUDE       <stdarg.h>
 
 #if LV_USE_STDLIB_MALLOC == LV_STDLIB_BUILTIN
-    /** Size of memory available for `lv_malloc()` in bytes (>= 2kB) */
+     /** Size of memory available for `lv_malloc()` in bytes (>= 2kB) */
 #define LV_MEM_SIZE (128* 1024 * 1024U)
 
 /** Size of the memory expand for `lv_malloc()` in bytes */
@@ -893,7 +897,7 @@
 #define LV_USE_FS_STDIO 0
 #if LV_USE_FS_STDIO
 #define LV_FS_STDIO_LETTER 'A'
-#define LV_FS_STDIO_PATH ""         /**< Empty = relative to the working directory (portable) */
+#define LV_FS_STDIO_PATH "D:/CODE/SYS/lv_port_pc_vscode-master/bin/"         /**< Set the working directory. File/directory paths will be appended to it. */
 #define LV_FS_STDIO_CACHE_SIZE 0    /**< >0 to cache this number of bytes in lv_fs_read() */
 #endif
 
@@ -909,7 +913,7 @@
 #define LV_USE_FS_WIN32 1
 #if LV_USE_FS_WIN32
 #define LV_FS_WIN32_LETTER 'A'     /**< Set an upper-case driver-identifier letter for this driver (e.g. 'A'). */
-#define LV_FS_WIN32_PATH ""         /**< Empty = relative to the working directory (portable; double-clicking bin\\main.exe works) */
+#define LV_FS_WIN32_PATH "D:/CODE/SYS/lv_port_pc_vscode-master/bin/"         /**< Set the working directory. File/directory paths will be appended to it. */
 #define LV_FS_WIN32_CACHE_SIZE 0    /**< >0 to cache this number of bytes in lv_fs_read() */
 #endif
 
@@ -1013,7 +1017,7 @@
 #endif
 
  /** Built-in TTF decoder */
-#define LV_USE_TINY_TTF 1
+#define LV_USE_TINY_TTF 8
 #if LV_USE_TINY_TTF
     /* Enable loading TTF data from files */
 #define LV_TINY_TTF_FILE_SUPPORT 1
@@ -1091,7 +1095,7 @@
 
      /** 1: Show CPU usage and FPS count.
       *  - Requires `LV_USE_SYSMON = 1` */
-#define LV_USE_PERF_MONITOR 1
+#define LV_USE_PERF_MONITOR 0
 #if LV_USE_PERF_MONITOR
 #define LV_USE_PERF_MONITOR_POS LV_ALIGN_BOTTOM_RIGHT
 
@@ -1102,7 +1106,7 @@
 /** 1: Show used memory and memory fragmentation.
  *     - Requires `LV_USE_STDLIB_MALLOC = LV_STDLIB_BUILTIN`
  *     - Requires `LV_USE_SYSMON = 1`*/
-#define LV_USE_MEM_MONITOR 1
+#define LV_USE_MEM_MONITOR 0
 #if LV_USE_MEM_MONITOR
 #define LV_USE_MEM_MONITOR_POS LV_ALIGN_BOTTOM_LEFT
 #endif

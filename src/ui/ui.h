@@ -1,9 +1,9 @@
-/**
+/*
  * @file ui.h
- * @brief 学生成绩信息管理系统 —— LVGL v9.5 UI 框架层头文件。
+ * @brief 学生成绩信息管理系统 —— LVGL v9.5 界面层头文件。
  *
- * 本文件只描述 UI 层对外的接口和界面配置常量。
- * 数据层的结构体、CSV 函数、筛选/搜索/排序接口全部由 core.h 提供。
+ * 本文件只声明 UI 层对外接口和界面配置枚举；
+ * 学生结构体、CSV 读写、筛选/搜索/排序等由 core.h 提供。
  */
 
 #ifndef UI_H
@@ -11,102 +11,77 @@
 
 #include <stddef.h>
 
- /* LVGL v9.5 主头文件 */
+/* LVGL v9.5 主头文件。 */
 #include "lvgl/lvgl.h"
 
-/* 数据核心层：StudentCSV、MAX_FIELD_LEN、data_* / ui_help_* 函数 */
+/* 数据核心层：StudentCSV、stu_field_t、data_* / ui_help_* 函数原型。 */
 #include "src/core/core.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-    /* ======================== 尺寸常量 ======================== */
+/* ==================================================================
+ * 一、界面配置
+ * ================================================================== */
 
-#define UI_SCR_W              1080   /* 窗口/屏幕宽 */
-#define UI_SCR_H              720    /* 窗口/屏幕高 */
-#define UI_TOP_H              80     /* 顶部工具栏高 */
-#define UI_LIST_W             1080   /* 下方表格区域宽 */
-#define UI_LIST_H             620    /* 下方表格区域高 */
-#define UI_LIST_X             0      /* 下方表格区域 X 坐标 */
-#define UI_LIST_Y             100    /* 下方表格区域 Y 坐标 */
+/* 主界面尺寸：1080×720，main.c 创建窗口时与 UI 层共用。 */
+enum {
+    UI_SCR_W = 1080,   /* 窗口/屏幕宽度 */
+    UI_SCR_H = 720     /* 窗口/屏幕高度 */
+};
 
-#define UI_MAX_DATA_ROWS      200    /* 表格默认最多显示 200 行数据 */
-#define UI_COL_NUM            9      /* 第 1 列序号 + 8 列数据 */
-#define UI_ROW_H              50     /* 固定行高 */
-#define UI_DEFAULT_COL_W      120    /* 无数据时列宽默认值 */
+/* ==================================================================
+ * 二、字段编号与筛选枚举
+ * ================================================================== */
 
-#define UI_TOP_BTN_Y          10     /* 顶部按钮 Y 坐标 */
-#define UI_TOP_BTN_H          60     /* 顶部按钮高度 */
-#define UI_BTN_GAP            10     /* 相邻按钮间距 */
-#define UI_SEARCH_W           300    /* 搜索框宽度 */
-#define UI_SMALL_BTN_W        60     /* 小按钮宽度 */
-
-/* ======================== 图标配置 ======================== */
-
-/**
- * 图标文件夹地址。
- *
- * 默认使用 LVGL 文件系统路径 "A:icons/"；
- * 实际部署时请把该宏改成你的图标文件夹地址。
+/*
+ * 表格数据列对应的学生字段编号。
+ * 数值必须与 core.h 中的 stu_field_t 完全一致，UI 层会把它
+ * 直接传给 data_sort_students()、data_apply_filter() 等数据层函数。
  */
-#define UI_ICON_FOLDER "A:btn_png/"
+typedef enum {
+    UI_FIELD_GRADE = 0,    /* 年级   */
+    UI_FIELD_CLASS = 1,    /* 班级   */
+    UI_FIELD_ID = 2,       /* 学号   */
+    UI_FIELD_NAME = 3,     /* 姓名   */
+    UI_FIELD_GENDER = 4,   /* 性别   */
+    UI_FIELD_REGULAR = 5,  /* 平时   */
+    UI_FIELD_MIDTERM = 6,  /* 期中   */
+    UI_FIELD_FINAL = 7,    /* 期末   */
+    UI_FIELD_SCORE = 8,    /* 总分   */
+    UI_FIELD_GPA = 9,      /* 绩点   */
+    UI_FIELD_RANK = 10,    /* 排名   */
+    UI_FIELD_COUNT = 11    /* 字段总数 */
+} ui_field_t;
 
- /* 顶部搜索框/按钮图标文件名 */
-#define UI_ICON_SEARCH  "search.png"
-#define UI_ICON_FILTER  "filter.png"
-#define UI_ICON_HELP    "help.png"
-#define UI_ICON_IMPORT  "import.png"
-#define UI_ICON_EXPORT  "export.png"
-#define UI_ICON_DELETE  "delete.png"
+/* 筛选第一级列表中的类别。 */
+typedef enum {
+    UI_FILTER_GRADE = 0,   /* 按年级筛选 */
+    UI_FILTER_CLASS = 1,   /* 按班级筛选 */
+    UI_FILTER_GENDER = 2,  /* 按性别筛选 */
+    UI_FILTER_SCORE = 3,   /* 按分数段筛选 */
+    UI_FILTER_ALL = 4      /* 全部（清除筛选） */
+} ui_filter_kind_t;
 
-/* 表头排序按钮图标文件名（四个排序按钮共用） */
-#define UI_ICON_SORT    "sort.png"
+/* ==================================================================
+ * 三、UI 对外接口
+ * ================================================================== */
 
-/* ======================== 字段/筛选枚举 ======================== */
-
-/**
- * 表格第 2~9 列对应的学生结构体字段。
- * 数值必须与 core.h 中的 stu_field_t 完全一致。
+/*
+ * 创建完整 UI：顶部工具栏、固定表头、12 列数据网格和所有弹窗。
+ * @param scr 父屏幕对象，通常传 lv_screen_active()。
  */
-    typedef enum {
-        UI_FIELD_GRADE = 0,   /* 年级   */
-        UI_FIELD_CLASS = 1,   /* 班级   */
-        UI_FIELD_ID = 2,   /* 学号   */
-        UI_FIELD_NAME = 3,   /* 姓名   */
-        UI_FIELD_GENDER = 4,   /* 性别   */
-        UI_FIELD_SCORE = 5,   /* 分数   */
-        UI_FIELD_GPA = 6,   /* 绩点   */
-        UI_FIELD_RANK = 7,   /* 排名   */
-        UI_FIELD_COUNT = 8
-    } ui_field_t;
+void ui_create(lv_obj_t* scr);
 
-    /**
-     * 筛选第一级列表中的类别。
-     */
-    typedef enum {
-        UI_FILTER_GRADE = 0,
-        UI_FILTER_CLASS = 1,
-        UI_FILTER_GENDER = 2,
-        UI_FILTER_SCORE = 3,
-        UI_FILTER_ALL = 4
-    } ui_filter_kind_t;
+/* 设置界面统一字体（由 main.c 加载中文字体后调用）。 */
+void ui_set_font(const lv_font_t* font);
 
-    /* ======================== UI 框架对外接口 ======================== */
-
-    /**
-     * 创建完整 UI。
-     * @param scr 通常传 lv_screen_active()。
-     */
-    void ui_create(lv_obj_t* scr);
-
-    /** 从 core 读取当前显示数据并刷新网格。 */
-    void ui_refresh_grid(void);
-
-    /** 将内部键盘分组绑定到移植层的 keypad 输入设备。 */
-    void ui_bind_keyboard(lv_indev_t* kb);
-
-    void ui_set_font(const lv_font_t* font);
+/*
+ * 模拟点击顶部“帮助”按钮，用于首次运行时自动显示帮助。
+ * @return 1 帮助浮层创建成功；0 创建失败（例如帮助图片缺失）。
+ */
+int ui_show_help(void);
 
 #ifdef __cplusplus
 }
