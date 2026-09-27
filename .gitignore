@@ -2,6 +2,11 @@
 # build/ 由 CMake 重新生成即可，且其中的 CMakeCache.txt 残留本机绝对路径
 build/
 
+# bin/ 下的编译产物：每次构建内容都会变，提交进去会让仓库无谓膨胀
+# 注意：bin/ 里的字体、图片、students.csv 是项目资产，仍需保留在版本控制中
+bin/main.exe
+bin/libmain.dll.a
+
 # ===== 编辑器 / 系统临时文件 =====
 .DS_Store
 Thumbs.db
