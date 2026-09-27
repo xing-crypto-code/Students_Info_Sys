@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "配置 CMake (Ninja + MinGW)",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-S",
+                ".",
+                "-B",
+                "build",
+                "-G",
+                "Ninja",
+                "-DCMAKE_BUILD_TYPE=Debug",
+                "-DCMAKE_C_COMPILER=C:/bandizip/mingw64/bin/gcc.exe",
+                "-DCMAKE_CXX_COMPILER=C:/bandizip/mingw64/bin/g++.exe",
+                "-DCMAKE_CXX_FLAGS=-include cinttypes",
+                "-DCMAKE_C_FLAGS=-include malloc.h",
+                "-DCMAKE_EXE_LINKER_FLAGS=-static",
+                "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "构建 LVGL 模拟器",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "build",
+                "--parallel"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "dependsOn": "配置 CMake (Ninja + MinGW)",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "运行 LVGL 模拟器",
+            "type": "shell",
+            "command": "${workspaceFolder}\\bin\\main.exe",
+            "options": {
+                "cwd": "${workspaceFolder}\\bin"
+            },
+            "dependsOn": "构建 LVGL 模拟器",
+            "problemMatcher": []
+        },
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc.exe 生成活动文件",
+            "command": "C:\\bandizip\\mingw64\\bin\\gcc.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}\\${fileBasenameNoExtension}.exe"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "仅用于编译单文件练习；编译本工程请用「构建 LVGL 模拟器」（它会把 SDL2/LVGL 的 include 路径全部带上）。"
+        }
+    ]
+}

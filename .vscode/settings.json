@@ -1,0 +1,48 @@
+{
+    // ===== CMake Tools 环境配置（本机路径，勿使用旧机器的 D:\CODE\SYS\...）=====
+
+    // 本机 CMake 可执行文件
+    "cmake.cmakePath": "C:\\Program Files\\CMake\\bin\\cmake.exe",
+
+    // 生成器：Ninja（需在 PATH 中，本机已通过 WinGet 安装）
+    "cmake.generator": "Ninja",
+
+    // 源码目录与构建目录
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+
+    // 打开工程时自动配置
+    "cmake.configureOnOpen": true,
+    "cmake.configureOnEdit": false,
+
+    // 生成 compile_commands.json，供 C/C++ 扩展做 IntelliSense
+    "cmake.exportCompileCommandsFile": true,
+
+    // 传给 cmake 的配置参数
+    "cmake.configureArgs": [
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_C_COMPILER=C:/bandizip/mingw64/bin/gcc.exe",
+        "-DCMAKE_CXX_COMPILER=C:/bandizip/mingw64/bin/g++.exe",
+        // (1) LVGL 内置 ThorVG 的 tvgInitializer.cpp 使用了 PRIu32 但没有包含 <cinttypes>，
+        //     本机 GCC 8 不会隐式提供该宏。下面这行在不修改任何源码的前提下补上它。
+        "-DCMAKE_CXX_FLAGS=-include cinttypes",
+        // (2) LVGL 的 SDL 驱动调用了 _aligned_malloc，但 SDL 头文件会先定义
+        //     _MM_MALLOC_H_INCLUDED，导致 MinGW 的 malloc.h 跳过该函数声明。
+        //     这里把 malloc.h 提前包含，同样不需要修改源码。
+        "-DCMAKE_C_FLAGS=-include malloc.h",
+        // (3) 完全静态链接 GCC / C++ / winpthread 运行库，使 main.exe 只依赖 Windows 自带
+        //     系统 DLL 和同目录的 SDL2.dll，拷到没装 MinGW 的电脑上也能直接双击运行。
+        "-DCMAKE_EXE_LINKER_FLAGS=-static",
+        // (4) 生成 build/compile_commands.json，C/C++ 扩展靠它获得精准的 IntelliSense
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+    ],
+
+    // 让 C/C++ 扩展使用同一套工具链
+    "C_Cpp.default.compilerPath": "C:\\bandizip\\mingw64\\bin\\gcc.exe",
+    "C_Cpp.default.cStandard": "gnu99",
+    "C_Cpp.default.cppStandard": "gnu++17",
+    "C_Cpp.default.intelliSenseMode": "windows-gcc-x64",
+
+    // 按住 Ctrl 并滚动鼠标滚轮即可放大/缩小编辑器字号（项目内兜底，任何配置文件下都生效）
+    "editor.mouseWheelZoom": true
+}

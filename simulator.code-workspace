@@ -1,0 +1,31 @@
+{
+	// https://code.visualstudio.com/docs/editor/workspaces
+	// https://code.visualstudio.com/docs/editor/multi-root-workspaces
+	// https://code.visualstudio.com/docs/editor/variables-reference
+	"folders": [
+		{
+			"path": "."
+		},
+	],
+	// extensions.json section
+	"extensions": {
+		"recommendations": [
+			"ms-vscode.cpptools", // common C/C++ support
+			"ms-vscode.cpptools-themes", // general C/C++ theme
+			"ms-vscode.cmake-tools" // cmake support
+		],
+		"unwantedRecommendations": []
+	},
+	// settings.json section
+	"settings": {
+		"files.trimTrailingWhitespace": true,
+		"files.insertFinalNewline": true,
+		"files.trimFinalNewlines": true,
+		"cmake.configureOnOpen": true,
+		"files.associations": {
+			"glob.h": "c",
+			"lvgl.h": "c"
+		},
+		"cmake.generator": "Ninja"
+	}
+}
