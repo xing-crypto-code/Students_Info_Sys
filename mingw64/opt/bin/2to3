@@ -1,0 +1,5 @@
+#!C:/buildroot/x86_64-1420-win32-seh-ucrt-rt_v12-rev2/mingw64/opt/bin/python3.12.exe
+import sys
+from lib2to3.main import main
+
+sys.exit(main("lib2to3.fixes"))

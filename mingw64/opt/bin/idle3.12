@@ -1,0 +1,5 @@
+#!C:/buildroot/x86_64-1420-win32-seh-ucrt-rt_v12-rev2/mingw64/opt/bin/python3.12.exe
+
+from idlelib.pyshell import main
+if __name__ == '__main__':
+    main()
