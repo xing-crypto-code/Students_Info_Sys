@@ -163,6 +163,12 @@ if (WIN32)
     endif()
 endif()
 
+# 静态链接 GCC 运行库：使 main.exe 不依赖 libgcc_s_seh-1.dll / libstdc++-6.dll，
+# 在没有安装 MinGW 的电脑上也能直接运行。
+if (WIN32 AND NOT MSVC)
+    target_link_options(main PRIVATE -static-libgcc -static-libstdc++)
+endif()
+
 # Apply additional compile options if the build type is Debug
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message(STATUS "Debug mode enabled")
