@@ -1,4 +1,4 @@
-﻿# 随仓库携带的编译工具链按非文本处理：字节原样保存，不做换行符转换
+# 随仓库携带的编译工具链按非文本处理：字节原样保存，不做换行符转换
 mingw64/** -text -diff
 cmake-4.1.2-windows-x86_64/** -text -diff
 ninja.exe -text -diff
