@@ -118,6 +118,8 @@ lv_port_pc_vscode-master/
 ├── cmake-4.1.2-windows-x86_64/ CMake 4.1.2（随仓库携带）
 ├── ninja.exe                   Ninja 1.13.1 构建器（随仓库携带）
 ├── CMakeLists.txt              构建脚本
+├── build.bat                   一键构建（双击即可，使用仓库自带的工具链）
+├── run.bat                     一键运行（自动切到 bin 目录再启动 main.exe）
 ├── lv_conf.h                   LVGL 功能裁剪配置
 ├── simulator.code-workspace    VS Code 工作区配置
 └── licence.txt                 MIT 许可证
@@ -222,6 +224,8 @@ REGULAR=5, MIDTERM=6, FINAL=7, SCORE=8, GPA=9, RANK=10
 
 ### 九、构建与运行
 
+**最简单的方式**：双击项目根目录的 `build.bat`（自动配置 CMake 并编译），看到 `Build succeeded` 后双击 `run.bat` 启动程序。
+
 **开箱即用**——仓库自带全部工具链，克隆后无需额外安装任何软件：
 
 ```bat
@@ -246,7 +250,7 @@ $env:PATH = "$root\mingw64\bin;$root\cmake-4.1.2-windows-x86_64\bin;$root;$env:P
 & "$root\ninja.exe" -C "$root\build" main
 ```
 
-生成的程序位于 `bin\main.exe`。**建议从 `bin` 目录运行**，因为字体、图标和帮助图片都相对于该目录查找：
+生成的程序位于 `bin\main.exe`。**必须从 `bin` 目录运行**（或直接双击 `run.bat`）：LVGL 的 `A:` 盘符映射到程序当前工作目录，字体、图标和帮助图片都相对于它查找。若从项目根目录启动，中文字体与图标会静默加载失败。
 
 ```bat
 cd bin && main.exe
@@ -394,6 +398,8 @@ lv_port_pc_vscode-master/
 ├── cmake-4.1.2-windows-x86_64/ CMake 4.1.2 (vendored)
 ├── ninja.exe                   Ninja 1.13.1 builder (vendored)
 ├── CMakeLists.txt              Build script
+├── build.bat                   One-click build (double-click; uses the vendored toolchain)
+├── run.bat                     One-click run (switches to bin\ before launching main.exe)
 ├── lv_conf.h                   LVGL feature configuration
 ├── simulator.code-workspace    VS Code workspace configuration
 └── licence.txt                 MIT license
@@ -500,6 +506,8 @@ The window is split into a 1080 × 80 toolbar on top and a 1080 × 560 table are
 
 ### 9. Building and Running
 
+**Quickest way**: double-click `build.bat` in the project root (it configures CMake and compiles), then double-click `run.bat` to launch the app.
+
 **Everything needed is already in the repository** — a fresh clone requires no additional software:
 
 ```bat
@@ -524,7 +532,7 @@ $env:PATH = "$root\mingw64\bin;$root\cmake-4.1.2-windows-x86_64\bin;$root;$env:P
 & "$root\ninja.exe" -C "$root\build" main
 ```
 
-The resulting executable is `bin\main.exe`. **Run it from the `bin` directory**, because the fonts, icons and help images are resolved relative to it:
+The resulting executable is `bin\main.exe`. **It must be run from the `bin` directory** (or just double-click `run.bat`): LVGL's `A:` drive maps to the process working directory, and the fonts, icons and help images are resolved relative to it. Launching it from the project root makes the CJK font and the icons fail silently.
 
 ```bat
 cd bin && main.exe

@@ -18,6 +18,10 @@ build/
 .vs/
 .config*
 config.h
+# thorvg 内部渲染器需要此文件，它是 LVGL 随仓库分发的源码（上游用 git add -f 强制入库）。
+# 若被上面的 config.h 规则忽略，git status 无法察觉它的丢失，会导致构建报
+# "tvgCommon.h:29: fatal error: config.h: No such file or directory"。
+!src/libs/thorvg/config.h
 defconfig
 env/*
 docs-venv

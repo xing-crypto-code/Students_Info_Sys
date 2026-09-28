@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "配置 CMake",
+            "type": "shell",
+            "command": "${workspaceFolder}\\cmake-4.1.2-windows-x86_64\\bin\\cmake.exe",
+            "args": [
+                "-S", "${workspaceFolder}",
+                "-B", "${workspaceFolder}\\build",
+                "-G", "Ninja",
+                "-DCMAKE_BUILD_TYPE=Release",
+                "-DCMAKE_MAKE_PROGRAM=${workspaceFolder}\\ninja.exe"
+            ],
+            "options": {
+                "env": {
+                    "PATH": "${workspaceFolder}\\mingw64\\bin;${workspaceFolder};${env:PATH}"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "构建",
+            "type": "shell",
+            "command": "${workspaceFolder}\\ninja.exe",
+            "args": ["-C", "${workspaceFolder}\\build", "main"],
+            "options": {
+                "env": {
+                    "PATH": "${workspaceFolder}\\mingw64\\bin;${workspaceFolder};${env:PATH}"
+                }
+            },
+            "dependsOn": "配置 CMake",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"],
+            "detail": "使用仓库自带的 mingw64 + CMake + Ninja 构建 bin/main.exe"
+        },
+        {
+            "label": "运行",
+            "type": "shell",
+            "command": "${workspaceFolder}\\bin\\main.exe",
+            "options": {
+                "cwd": "${workspaceFolder}\\bin"
+            },
+            "dependsOn": "构建",
+            "problemMatcher": []
+        },
+        {
+            "label": "清理构建目录",
+            "type": "shell",
+            "windows": {
+                "command": "cmd",
+                "args": [
+                    "/c",
+                    "if exist \"${workspaceFolder}\\build\" rmdir /s /q \"${workspaceFolder}\\build\""
+                ]
+            },
+            "problemMatcher": []
+        }
+    ]
+}

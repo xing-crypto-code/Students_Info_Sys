@@ -897,7 +897,7 @@
 #define LV_USE_FS_STDIO 0
 #if LV_USE_FS_STDIO
 #define LV_FS_STDIO_LETTER 'A'
-#define LV_FS_STDIO_PATH "D:/CODE/SYS/lv_port_pc_vscode-master/bin/"         /**< Set the working directory. File/directory paths will be appended to it. */
+#define LV_FS_STDIO_PATH ""         /**< Set the working directory. File/directory paths will be appended to it. */
 #define LV_FS_STDIO_CACHE_SIZE 0    /**< >0 to cache this number of bytes in lv_fs_read() */
 #endif
 
@@ -913,7 +913,9 @@
 #define LV_USE_FS_WIN32 1
 #if LV_USE_FS_WIN32
 #define LV_FS_WIN32_LETTER 'A'     /**< Set an upper-case driver-identifier letter for this driver (e.g. 'A'). */
-#define LV_FS_WIN32_PATH "D:/CODE/SYS/lv_port_pc_vscode-master/bin/"         /**< Set the working directory. File/directory paths will be appended to it. */
+#define LV_FS_WIN32_PATH ""         /**< 空字符串 = 相对当前工作目录。字体/图标/帮助图片都放在 bin/ 下，
+                                        因此必须先进入 bin 目录再运行 main.exe（见 run.bat 与 README）。
+                                        不要在此填写绝对路径，否则换台机器就无法加载资源。 */
 #define LV_FS_WIN32_CACHE_SIZE 0    /**< >0 to cache this number of bytes in lv_fs_read() */
 #endif
 
