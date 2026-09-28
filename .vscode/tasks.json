@@ -40,7 +40,13 @@
         {
             "label": "运行",
             "type": "shell",
-            "command": "${workspaceFolder}\\bin\\main.exe",
+            "command": "cmd",
+            "args": [
+                "/c",
+                "start",
+                "\"\"",
+                "${workspaceFolder}\\bin\\main.exe"
+            ],
             "options": {
                 "cwd": "${workspaceFolder}\\bin"
             },

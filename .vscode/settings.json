@@ -7,5 +7,33 @@
         "${workspaceFolder}/**"
     ],
     "files.trimTrailingWhitespace": true,
-    "files.insertFinalNewline": true
+    "files.insertFinalNewline": true,
+
+    // ===== CMake Tools =====
+    // 全部指向仓库自带的工具链，不依赖系统 PATH 里是否装了 cmake / ninja / gcc。
+    // 若不这样配置，CMake Tools 会去调用系统 cmake，弹出「cmake 可执行文件出错」，
+    // 并卡在自动配置上。
+    "cmake.cmakePath": "${workspaceFolder}/cmake-4.1.2-windows-x86_64/bin/cmake.exe",
+    "cmake.generator": "Ninja",
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureArgs": [
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_MAKE_PROGRAM=${workspaceFolder}/ninja.exe",
+        // 必须与 build/CMakeCache.txt 里已记录的编译器路径一致，
+        // 否则 CMake 会判定「编译器变更」并触发一次全量重编（900+ 目标）。
+        "-DCMAKE_C_COMPILER=${workspaceFolder}/mingw64/bin/cc.exe",
+        "-DCMAKE_CXX_COMPILER=${workspaceFolder}/mingw64/bin/c++.exe"
+    ],
+    "cmake.configureEnvironment": {
+        "PATH": "${workspaceFolder}/mingw64/bin;${workspaceFolder};${env:PATH}"
+    },
+    "cmake.buildEnvironment": {
+        "PATH": "${workspaceFolder}/mingw64/bin;${workspaceFolder};${env:PATH}"
+    },
+    // 打开工作区时不要自动配置 —— 这是之前“卡住”的直接来源
+    "cmake.configureOnOpen": false,
+    "cmake.automaticReconfigure": false,
+    // 调试/运行前不要偷偷触发构建，统一由任务或 build.bat 负责
+    "cmake.buildBeforeRun": false
 }
